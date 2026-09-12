@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Namirunime ID - Setup Profil, VIP & Beranda</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0b0914;
+            color: #ffffff;
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0b0914;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .splash-video-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -55%);
+            width: 260px;
+            max-width: 80%;
+            height: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+            border: none;
+            outline: none;
+            z-index: 1;
+        }
+
+        .splash-video {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .splash-overlay {
+            position: absolute;
+            bottom: 50px;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .loading-status-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #ffffff;
+            font-weight: 600;
+            background: rgba(11, 9, 20, 0.8);
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(123, 120, 255, 0.3);
+        }
+
+        .dot-spinner {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .dot-spinner span {
+            width: 5px;
+            height: 5px;
+            background-color: #7b78ff;
+            border-radius: 50%;
+            animation: bounceDot 1.4s infinite ease-in-out both;
+        }
+
+        .dot-spinner span:nth-child(1) { animation-delay: -0.32s; }
+        .dot-spinner span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounceDot {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        #mandatory-setup-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(11, 9, 20, 0.95);
+            z-index: 9998;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+        }
+
+        #mandatory-setup-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .setup-card {
+            background-color: #161325;
+            border: 1px solid #231f3d;
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .setup-card h2 {
+            font-size: 18px;
+            margin-bottom: 6px;
+            color: #fff;
+        }
+
+        .setup-card p {
+            font-size: 12px;
+            color: #6c6980;
+            margin-bottom: 16px;
+        }
+
+        .setup-input-group {
+            margin-bottom: 14px;
+        }
+
+        .setup-input-group label {
+            font-size: 11px;
+            color: #b0aec4;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .setup-input-group input {
+            width: 100%;
+            background-color: #0b0914;
+            border: 1px solid #231f3d;
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .setup-file-box {
+            border: 2px dashed #231f3d;
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #0b0914;
+        }
+
+        .setup-file-box input {
+            display: none;
+        }
+
+        .setup-submit-btn {
+            background-color: #7b78ff;
+            color: #fff;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .page-view { display: none; }
+        .page-view.active-page { display: block; }
+
+        #main-content {
+            opacity: 0;
+            transform: scale(0.85) translateY(40px);
+            transform-origin: bottom center;
+        }
+
+        .page-loaded #main-content {
+            animation: appOpenTransition 0.65s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
+
+        @keyframes appOpenTransition {
+            0% { opacity: 0; transform: scale(0.85) translateY(40px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .page-loaded .animate-fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: contentFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+        .delay-5 { animation-delay: 0.5s; }
+
+        @keyframes contentFadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .header-title { font-size: 18px; font-weight: 700; color: #fff; }
+        .header-server { font-size: 11px; color: #7b78ff; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+
+        .profile-thumb {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #7b78ff;
+        }
+
+        .search-bar-container {
+            padding: 0 16px 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .search-box {
+            background-color: #161325;
+            border-radius: 20px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-grow: 1;
+            min-width: 150px;
+            border: 1px solid #231f3d;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            outline: none;
+            font-size: 13px;
+            width: 100%;
+        }
+
+        .search-box input::placeholder { color: #6c6980; }
+
+        .quick-btn {
+            background-color: #161325;
+            border: 1px solid #231f3d;
+            border-radius: 16px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .quick-btn.vip {
+            background: linear-gradient(135deg, #2a2211, #161325);
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+
+        .main-ad-banner {
+            margin: 0 16px 12px 16px;
+            background: linear-gradient(135deg, #23183b, #161325);
+            border: 1px solid #7b78ff;
+            border-radius: 16px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .main-ad-banner span {
+            font-size: 12px;
+            color: #d1cfdb;
+        }
+
+        .main-ad-banner button {
+            background-color: #7b78ff;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .profile-card {
+            background-color: #161325;
+            margin: 12px 16px;
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid #231f3d;
+        }
+
+        .profile-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .profile-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .profile-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .verified-badge {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .profile-id {
+            font-size: 12px;
+            color: #6c6980;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .badges {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background-color: #231f3d;
+            color: #b0aec4;
+        }
+
+        .badge.vip-badge {
+            color: #ffd700;
+            background-color: rgba(255, 215, 0, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            text-align: center;
+            padding: 12px 0;
+            border-top: 1px solid #231f3d;
+            border-bottom: 1px solid #231f3d;
+            margin-bottom: 14px;
+        }
+
+        .stat-item .stat-value { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+        .stat-item .stat-label { font-size: 11px; color: #6c6980; }
+
+        .xp-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .xp-bar-container { flex-grow: 1; margin-right: 12px; }
+        .xp-text { font-size: 11px; color: #6c6980; margin-bottom: 6px; }
+        .xp-bar { width: 100%; height: 4px; background-color: #231f3d; border-radius: 2px; overflow: hidden; }
+        .xp-fill { width: 0%; height: 100%; background-color: #7b78ff; border-radius: 2px; }
+
+        .profile-btn {
+            background-color: #231f3d;
+            color: #fff;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .announcement-card {
+            background-color: #161325;
+            margin: 12px 16px;
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid #231f3d;
+            cursor: pointer;
+        }
+
+        .announcement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .announcement-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .info-pill { background-color: #231f3d; color: #b0aec4; font-size: 10px; padding: 2px 8px; border-radius: 6px; }
+        .announcement-body { font-size: 13px; color: #d1cfdb; margin-bottom: 10px; line-height: 1.4; }
+        .announcement-footer { font-size: 12px; color: #7b78ff; display: flex; justify-content: space-between; align-items: center; }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 0 16px 12px 16px;
+        }
+
+        .feature-box {
+            background-color: #161325;
+            border-radius: 16px;
+            padding: 14px;
+            border: 1px solid #231f3d;
+            cursor: pointer;
+        }
+
+        .feature-box.chat-box { grid-column: span 2; }
+        .feature-box h4 { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .feature-box p { font-size: 11px; color: #6c6980; margin-bottom: 10px; line-height: 1.3; }
+
+        .feature-action-btn {
+            background-color: #231f3d;
+            color: #fff;
+            border: none;
+            width: 100%;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .feature-box.vip-box {
+            background: linear-gradient(135deg, #1d170a, #161325);
+            border-color: #4a3d11;
+            cursor: pointer;
+        }
+        
+        .feature-box.vip-box h4 { color: #ffd700; }
+
+        .banner-card {
+            margin: 0 16px 12px 16px;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(135deg, #321f5c, #161325);
+            border: 1px solid #231f3d;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            cursor: pointer;
+        }
+
+        .banner-card img {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 60%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.5;
+            mask-image: linear-gradient(to right, transparent, black);
+            -webkit-mask-image: linear-gradient(to right, transparent, black);
+        }
+
+        .banner-content { z-index: 2; }
+        .banner-content h4 { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+        .banner-content p { font-size: 11px; color: #b0aec4; }
+
+        .nav-menu-card {
+            background-color: #161325;
+            margin: 0 16px 12px 16px;
+            border-radius: 16px;
+            padding: 14px 16px;
+            border: 1px solid #231f3d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .nav-menu-left { display: flex; align-items: center; gap: 12px; }
+        .nav-icon-box {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 16px;
+        }
+        .nav-icon-box.pink { background: linear-gradient(135deg, #ff4757, #ff6b81); }
+        .nav-icon-box.green { background: linear-gradient(135deg, #2ed573, #1e90ff); }
+        .nav-menu-info h4 { font-size: 13px; font-weight: 600; margin-bottom: 2px; color: #fff; }
+        .nav-menu-info p { font-size: 11px; color: #6c6980; }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin: 16px 16px 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .explore-filters {
+            display: flex;
+            gap: 8px;
+            padding: 0 16px 14px 16px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .explore-filter-chip {
+            background-color: #161325;
+            border: 1px solid #231f3d;
+            color: #b0aec4;
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .explore-filter-chip.active { background-color: #3b3366; color: #fff; border-color: #7b78ff; }
+
+        .genre-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 0 16px 20px 16px;
+        }
+
+        .genre-btn {
+            background-color: #161325;
+            border: 1px solid #231f3d;
+            color: #d1cfdb;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .profile-header-bg {
+            position: relative;
+            height: 180px;
+            background: linear-gradient(to bottom, rgba(11,9,20,0), #0b0914), url('https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600') center/cover;
+        }
+
+        .profile-header-actions {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .profile-top-icon-btn {
+            background: rgba(0,0,0,0.5);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .profile-user-info-section {
+            padding: 0 16px;
+            margin-top: -30px;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .profile-big-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #0b0914;
+            object-fit: cover;
+        }
+
+        .edit-profile-btn {
+            background-color: #4b46ff;
+            color: #fff;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .profile-details-text { padding: 12px 16px; }
+        .profile-details-text h2 { font-size: 18px; font-weight: 700; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+        .profile-details-text p { font-size: 12px; color: #6c6980; margin-bottom: 8px; }
+        .profile-status { font-size: 11px; color: #2ed573; display: flex; align-items: center; gap: 4px; }
+
+        .profile-stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background-color: #161325;
+            margin: 12px 16px;
+            border-radius: 16px;
+            padding: 14px 0;
+            text-align: center;
+            border: 1px solid #231f3d;
+        }
+
+        .profile-stat-val { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+        .profile-stat-lbl { font-size: 11px; color: #6c6980; }
+
+        .watchlist-section { padding: 0 16px; }
+        .empty-watchlist {
+            background-color: #161325;
+            border: 1px solid #231f3d;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            color: #6c6980;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .settings-container { padding: 16px; }
+        .settings-card {
+            background-color: #161325;
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid #231f3d;
+            margin-bottom: 16px;
+        }
+
+        .settings-group-title {
+            font-size: 11px;
+            color: #6c6980;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin: 16px 16px 8px 16px;
+            letter-spacing: 0.5px;
+        }
+
+        .settings-item {
+            background-color: #161325;
+            margin: 0 16px 8px 16px;
+            border-radius: 14px;
+            padding: 12px 16px;
+            border: 1px solid #231f3d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .settings-item-left { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500; }
+        .settings-item-left i { color: #7b78ff; font-size: 15px; }
+
+        .edit-form-group { margin-bottom: 14px; }
+        .edit-form-group label { font-size: 12px; color: #b0aec4; display: block; margin-bottom: 6px; }
+        .edit-form-group input, .edit-form-group select {
+            width: 100%;
+            background-color: #0b0914;
+            border: 1px solid #231f3d;
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+        .file-input-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+        .file-fake-btn {
+            background-color: #0b0914;
+            border: 1px solid #231f3d;
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #b0aec4;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .vip-store-container { padding: 16px; }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .price-card {
+            background-color: #161325;
+            border: 1px solid #231f3d;
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .price-card:hover, .price-card.selected {
+            border-color: #ffd700;
+            background-color: rgba(255, 215, 0, 0.05);
+        }
+        .price-card h5 { font-size: 12px; color: #b0aec4; margin-bottom: 4px; }
+        .price-card h4 { font-size: 15px; color: #ffd700; font-weight: 700; }
+
+        .payment-qr-section {
+            background-color: #161325;
+            border: 1px solid #231f3d;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .payment-qr-section img {
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        .payment-details-box {
+            text-align: left;
+            background-color: #0b0914;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            color: #d1cfdb;
+            margin-top: 10px;
+            border: 1px solid #231f3d;
+        }
+        .payment-details-box p { margin-bottom: 4px; }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #13111c;
+            border-top: 1px solid #231f3d;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 0;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #6c6980;
+            font-size: 10px;
+            gap: 4px;
+            position: relative;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .nav-item i { font-size: 18px; }
+        .nav-item.active { color: #7b78ff; }
+
+        .nav-center-btn {
+            background-color: #7b78ff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(123, 120, 255, 0.4);
+            margin-top: -10px;
+        }
+
+        .badge-notification {
+            position: absolute;
+            top: -3px;
+            right: 5px;
+            background-color: #ff4757;
+            color: #fff;
+            font-size: 9px;
+            padding: 1px 4px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen">
+        <div class="splash-video-wrapper">
+            <video id="splash-video" class="splash-video" autoplay muted playsinline>
+                <source src="https://files.catbox.moe/26igzx.mp4" type="video/mp4">
+                Browser Anda tidak mendukung tag video.
+            </video>
+        </div>
+        <div class="splash-overlay">
+            <div class="loading-status-container">
+                <span id="loading-percent">0%</span>
+                <div class="dot-spinner">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mandatory-setup-modal">
+        <div class="setup-card">
+            <h2>Selamat Datang di Namirunime ID!</h2>
+            <p>Silakan buat identitas akun server publik Anda untuk mulai mencari teman.</p>
+            
+            <div class="setup-input-group">
+                <label>Nama Pengguna (Wajib)</label>
+                <input type="text" id="setup-username-input" placeholder="Masukkan nama panggilan...">
+            </div>
+
+            <div class="setup-input-group">
+                <label>Foto Profil / Galeri (Wajib)</label>
+                <div class="setup-file-box" onclick="document.getElementById('setup-avatar-file').click()">
+                    <span id="setup-file-text"><i class="fa-solid fa-image"></i> Pilih Gambar dari Galeri</span>
+                    <input type="file" id="setup-avatar-file" accept="image/*" onchange="handleSetupAvatar(event)">
+                </div>
+            </div>
+
+            <button class="setup-submit-btn" onclick="submitMandatorySetup()">Masuk ke Beranda</button>
+        </div>
+    </div>
+
+    <div id="main-content">
+
+        <div id="page-beranda" class="page-view active-page">
+            <div class="header animate-fade-in delay-1">
+                <div>
+                    <div class="header-title">Namirunime ID</div>
+                    <div class="header-server">Waktu Server Aktif: Temukan Temanmu</div>
+                </div>
+                <div class="header-right">
+                    <img id="header-thumb" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" alt="PP" class="profile-thumb" onclick="switchPage('profile')">
+                </div>
+            </div>
+
+            <div class="main-ad-banner animate-fade-in">
+                <span>🔥 Promo Lisensi Resmi Centang Biru Aktif!</span>
+                <button onclick="switchPage('vip-store')">Beli VIP</button>
+            </div>
+
+            <div class="search-bar-container animate-fade-in delay-2">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass" style="color: #6c6980; font-size: 13px;"></i>
+                    <input type="text" placeholder="Cari teman atau anime..." onkeydown="if(event.key==='Enter') showComingSoon('Fitur Pencarian')">
+                </div>
+                <button class="quick-btn" onclick="switchPage('settings')"><i class="fa-solid fa-user-gear"></i></button>
+                <button class="quick-btn vip" onclick="switchPage('vip-store')"><i class="fa-solid fa-crown"></i> VIP</button>
+                <button class="quick-btn" onclick="showComingSoon('Fitur Baca Buku/Komik')"><i class="fa-solid fa-book-open"></i> Baca</button>
+            </div>
+
+            <div class="profile-card animate-fade-in delay-3">
+                <div class="profile-top">
+                    <img id="beranda-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" alt="Avatar" class="profile-avatar" onclick="switchPage('profile')" style="cursor: pointer;">
+                    <div class="profile-info">
+                        <h3>
+                            <span id="display-username" onclick="switchPage('profile')" style="cursor: pointer;">NamirunimeUser</span>
+                            <img id="beranda-verified" class="verified-badge" src="https://files.catbox.moe/yl9zup.png" style="display: none;" alt="Verified">
+                        </h3>
+                        <div class="profile-id" onclick="showComingSoon('Salin ID Server')">ID Server: 239753 <i class="fa-regular fa-copy"></i></div>
+                        <div class="badges">
+                            <span id="user-vip-badge-label" class="badge vip-badge" onclick="switchPage('vip-store')" style="cursor:pointer;"><i class="fa-solid fa-crown"></i> FREE</span>
+                            <span class="badge" onclick="showComingSoon('Sistem Level Akun')"><i class="fa-solid fa-star"></i> LV 1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-item" onclick="showComingSoon('Detail Statistik Anime')" style="cursor:pointer;"><div class="stat-value" id="stat-anime">0</div><div class="stat-label">Anime</div></div>
+                    <div class="stat-item" onclick="showComingSoon('Detail Statistik Episode')" style="cursor:pointer;"><div class="stat-value" id="stat-episode">0</div><div class="stat-label">Episode</div></div>
+                    <div class="stat-item" onclick="showComingSoon('Detail Riwayat Ditonton')" style="cursor:pointer;"><div class="stat-value" id="stat-watchtime">0j 0m</div><div class="stat-label">Ditonton</div></div>
+                    <div class="stat-item" onclick="showComingSoon('Daftar Teman Server')" style="cursor:pointer;"><div class="stat-value" id="stat-friends">0</div><div class="stat-label">Teman</div></div>
+                </div>
+
+                <div class="xp-section">
+                    <div class="xp-bar-container" onclick="showComingSoon('Sistem XP & Level')" style="cursor:pointer;">
+                        <div class="xp-text">0 / 1.000 XP</div>
+                        <div class="xp-bar"><div class="xp-fill" style="width: 0%;"></div></div>
+                    </div>
+                    <button class="profile-btn" onclick="switchPage('profile')">Lihat Profil &gt;</button>
+                </div>
+            </div>
+
+            <!-- SECTION: LIST RILIS -->
+            <div class="section-title animate-fade-in"><i class="fa-solid fa-fire" style="color: #7b78ff;"></i> List Rilis</div>
+            
+            <div class="explore-filters animate-fade-in">
+                <div class="explore-filter-chip active" onclick="showComingSoon('Filter List Rilis: Semua')">Semua</div>
+                <div class="explore-filter-chip" onclick="showComingSoon('Filter List Rilis: Anime')">Anime</div>
+                <div class="explore-filter-chip" onclick="showComingSoon('Filter List Rilis: Donghua')">Donghua</div>
+                <div class="explore-filter-chip" onclick="showComingSoon('Filter List Rilis: Film')">Film</div>
+            </div>
+
+            <!-- TAB FILTER KECIL -->
+            <div style="display: flex; justify-content: space-around; background-color: #161325; margin: 0 16px 14px 16px; padding: 10px; border-radius: 14px; border: 1px solid #231f3d;" class="animate-fade-in">
+                <div style="text-align: center; cursor: pointer; font-size: 11px; color: #b0aec4;" onclick="showComingSoon('Menu Jadwal Rilis')">
+                    <i class="fa-solid fa-calendar-days" style="font-size: 16px; color: #7b78ff; display: block; margin-bottom: 2px;"></i> Jadwal
+                </div>
+                <div style="text-align: center; cursor: pointer; font-size: 11px; color: #b0aec4;" onclick="showComingSoon('Menu Riwayat Download')">
+                    <i class="fa-solid fa-download" style="font-size: 16px; color: #7b78ff; display: block; margin-bottom: 2px;"></i> Download
+                </div>
+                <div style="text-align: center; cursor: pointer; font-size: 11px; color: #b0aec4;" onclick="showComingSoon('Menu Bookmark/Favorit')">
+                    <i class="fa-solid fa-bookmark" style="font-size: 16px; color: #7b78ff; display: block; margin-bottom: 2px;"></i> Favorit
+                </div>
+            </div>
+
+            <!-- SECTION: TERBARU -->
+            <div class="section-title animate-fade-in">Terbaru</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 16px;" class="animate-fade-in">
+                <div style="background: #161325; border-radius: 12px; overflow: hidden; border: 1px solid #231f3d; cursor: pointer;" onclick="showComingSoon('Detail Anime Terbaru')">
+                    <div style="height: 110px; background: #231f3d; position: relative;">
+                        <span style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); font-size: 9px; padding: 2px 5px; border-radius: 4px; color: #ffd700;">EP 12</span>
+                    </div>
+                    <div style="padding: 8px; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Judul Anime 1</div>
+                </div>
+                <div style="background: #161325; border-radius: 12px; overflow: hidden; border: 1px solid #231f3d; cursor: pointer;" onclick="showComingSoon('Detail Anime Terbaru')">
+                    <div style="height: 110px; background: #231f3d; position: relative;">
+                        <span style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); font-size: 9px; padding: 2px 5px; border-radius: 4px; color: #ffd700;">EP 08</span>
+                    </div>
+                    <div style="padding: 8px; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Judul Anime 2</div>
+                </div>
+                <div style="background: #161325; border-radius: 12px; overflow: hidden; border: 1px solid #231f3d; cursor: pointer;" onclick="showComingSoon('Detail Anime Terbaru')">
+                    <div style="height: 110px; background: #231f3d; position: relative;">
+                        <span style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); font-size: 9px; padding: 2px 5px; border-radius: 4px; color: #ffd700;">EP 01</span>
+                    </div>
+                    <div style="padding: 8px; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Judul Anime 3</div>
+                </div>
+            </div>
+            <div style="padding: 12px 16px;" class="animate-fade-in">
+                <button class="feature-action-btn" onclick="showComingSoon('Selengkapnya List Terbaru')">Selengkapnya</button>
+            </div>
+
+            <!-- SECTION: ONGOING -->
+            <div class="section-title animate-fade-in">Ongoing</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 16px;" class="animate-fade-in">
+                <div style="background: #161325; border-radius: 12px; overflow: hidden; border: 1px solid #231f3d; cursor: pointer;" onclick="showComingSoon('Detail Anime Ongoing')">
+                    <div style="height: 110px; background: #231f3d; position: relative;">
+                        <span style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); font-size: 9px; padding: 2px 5px; border-radius: 4px; color: #2ed573;">ONGOING</span>
+                    </div>
+                    <div style="padding: 8px; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ongoing Series A</div>
+                </div>
+                <div style="background: #161325; border-radius: 12px; overflow: hidden; border: 1px solid #231f3d; cursor: pointer;" onclick="showComingSoon('Detail Anime Ongoing')">
+                    <div style="height: 110px; background: #231f3d; position: relative;">
+                        <span style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); font-size: 9px; padding: 2px 5px; border-radius: 4px; color: #2ed573;">ONGOING</span>
+                    </div>
+                    <div style="padding: 8px; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ongoing Series B</div>
+                </div>
+                <div style="background: #161325; border-radius: 12px; overflow: hidden; border: 1px solid #231f3d; cursor: pointer;" onclick="showComingSoon('Detail Anime Ongoing')">
+                    <div style="height: 110px; background: #231f3d; position: relative;">
+                        <span style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); font-size: 9px; padding: 2px 5px; border-radius: 4px; color: #2ed573;">ONGOING</span>
+                    </div>
+                    <div style="padding: 8px; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ongoing Series C</div>
+                </div>
+            </div>
+            <div style="padding: 12px 16px 20px 16px;" class="animate-fade-in">
+                <button class="feature-action-btn" onclick="showComingSoon('Selengkapnya List Ongoing')">Selengkapnya</button>
+            </div>
+
+            <div class="announcement-card animate-fade-in delay-4" onclick="showComingSoon('Detail Pengumuman Server')">
+                <div class="announcement-header">
+                    <div class="announcement-title"><i class="fa-solid fa-bullhorn" style="color: #7b78ff;"></i> Pengumuman Server</div>
+                    <span class="info-pill">Info</span>
+                </div>
+                <div class="announcement-body">🎉 Temukan teman baru dan nikmati fitur server publik Namirunime ID secara real-time!</div>
+                <div class="announcement-footer"><span>Selengkapnya</span></div>
+            </div>
+
+            <div class="features-grid animate-fade-in delay-5">
+                <div class="feature-box" onclick="switchPage('settings')">
+                    <h4><i class="fa-regular fa-lightbulb" style="color: #7b78ff;"></i> Atur Akun</h4>
+                    <p>Atur akun & preferensi di Settings...</p>
+                </div>
+                <div class="feature-box" onclick="showComingSoon('Fitur Nobar Teman')">
+                    <h4><i class="fa-solid fa-user-group" style="color: #7b78ff;"></i> Nobar Teman</h4>
+                    <p>Tonton bareng komunitas</p>
+                </div>
+                <div class="feature-box chat-box" onclick="showComingSoon('Global Server Chat')">
+                    <h4><i class="fa-regular fa-comment-dots" style="color: #7b78ff;"></i> Global Server Chat</h4>
+                    <p>sennappk77 : yuk mabar dan temukan teman baru</p>
+                    <button class="feature-action-btn">Buka Chat</button>
+                </div>
+                <div class="feature-box vip-box" style="grid-column: span 2;" onclick="switchPage('vip-store')">
+                    <h4><i class="fa-solid fa-crown"></i> Upgrade VIP & Centang Biru Resmi</h4>
+                    <p>Bebas iklan, centang biru server publik, & fitur eksklusif.</p>
+                </div>
+            </div>
+
+            <div class="banner-card animate-fade-in" onclick="showComingSoon('Event Gacha Bingo')">
+                <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500" alt="Event Gacha">
+                <div class="banner-content">
+                    <h4>EVENT GACHA BINGO</h4>
+                    <p>Kumpulkan hadiah menarik setiap hari!</p>
+                </div>
+            </div>
+
+            <div class="nav-menu-card animate-fade-in" style="margin-bottom: 20px;" onclick="showComingSoon('Pencarian Teman Server')">
+                <div class="nav-menu-left">
+                    <div class="nav-icon-box green"><i class="fa-solid fa-users"></i></div>
+                    <div class="nav-menu-info">
+                        <h4>Pencarian Teman Server</h4>
+                        <p>Temukan teman satu hobi di seluruh server.</p>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="color: #6c6980; font-size: 12px;"></i>
+            </div>
+        </div>
+
+        <div id="page-explore" class="page-view">
+            <div class="header">
+                <div class="header-title">Explore Genre</div>
+                <div class="header-right"><img id="explore-thumb" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" alt="PP" class="profile-thumb" onclick="switchPage('profile')"></div>
+            </div>
+
+            <div class="explore-filters">
+                <div class="explore-filter-chip active" onclick="showComingSoon('Filter Anime List')">Anime List</div>
+                <div class="explore-filter-chip" onclick="showComingSoon('Filter Donghua')">Donghua</div>
+                <div class="explore-filter-chip" onclick="showComingSoon('Filter Action Film')">Action Film</div>
+            </div>
+
+            <div class="genre-grid">
+                <div class="genre-btn" onclick="showComingSoon('Genre Action')">Action</div>
+                <div class="genre-btn" onclick="showComingSoon('Genre Adventure')">Adventure</div>
+                <div class="genre-btn" onclick="showComingSoon('Genre Comedy')">Comedy</div>
+                <div class="genre-btn" onclick="showComingSoon('Genre Fantasy')">Fantasy</div>
+                <div class="genre-btn" onclick="showComingSoon('Genre Romance')">Romance</div>
+                <div class="genre-btn" onclick="showComingSoon('Genre Sci-Fi')">Sci-Fi</div>
+                <div class="genre-btn" onclick="showComingSoon('Genre Slice of Life')">Slice of Life</div>
+                <div class="genre-btn" onclick="showComingSoon('Genre Sports')">Sports</div>
+            </div>
+        </div>
+
+        <div id="page-profile" class="page-view">
+            <div class="profile-header-bg">
+                <div class="profile-header-actions">
+                    <button class="profile-top-icon-btn" onclick="showComingSoon('Favorit Profil')"><i class="fa-solid fa-heart"></i></button>
+                    <button class="profile-top-icon-btn" onclick="switchPage('settings')"><i class="fa-solid fa-gear"></i></button>
+                </div>
+            </div>
+
+            <div class="profile-user-info-section">
+                <img id="profile-page-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" alt="Avatar" class="profile-big-avatar" onclick="switchPage('settings')">
+                <button class="edit-profile-btn" onclick="switchPage('settings')"><i class="fa-solid fa-pen"></i> Edit</button>
+            </div>
+
+            <div class="profile-details-text">
+                <h2>
+                    <span id="profile-page-username">NamirunimeUser</span>
+                    <img id="profile-verified" class="verified-badge" src="https://files.catbox.moe/yl9zup.png" style="display: none;" alt="Verified">
+                </h2>
+                <p onclick="showComingSoon('Salin ID Server')">@namirunime_user (ID Server: 239753)</p>
+                <div class="profile-status"><span style="width:7px; height:7px; background:#2ed573; border-radius:50%; display:inline-block;"></span> Online di Server</div>
+            </div>
+
+            <div class="profile-stats-bar">
+                <div onclick="showComingSoon('Daftar Teman')" style="cursor:pointer;"><div class="profile-stat-val" id="profile-stat-friends">0</div><div class="profile-stat-lbl">Teman</div></div>
+                <div onclick="showComingSoon('Daftar Mengikuti')" style="cursor:pointer;"><div class="profile-stat-val">0</div><div class="profile-stat-lbl">Mengikuti</div></div>
+                <div onclick="showComingSoon('Waktu Ditonton')" style="cursor:pointer;"><div class="profile-stat-val" id="profile-stat-watchtime">0 menit</div><div class="profile-stat-lbl">Ditonton</div></div>
+            </div>
+
+            <div class="section-title"><i class="fa-solid fa-bookmark" style="color: #7b78ff;"></i> Anime Favorit</div>
+            <div class="watchlist-section" onclick="showComingSoon('Tambah Anime Favorit')">
+                <div class="empty-watchlist" style="cursor: pointer;">Belum ada anime favorit (Klik untuk tambah)</div>
+            </div>
+        </div>
+
+        <div id="page-vip-store" class="page-view">
+            <div class="header">
+                <div class="header-title" style="display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-chevron-left" style="cursor:pointer;" onclick="switchPage('beranda')"></i> Toko Lisensi VIP
+                </div>
+                <div class="header-right"><span style="font-size:11px; color:#ffd700;"><i class="fa-solid fa-crown"></i> Server Store</span></div>
+            </div>
+
+            <div class="vip-store-container">
+                <h4 style="font-size: 13px; color: #ffd700; margin-bottom: 10px;">Pilih Durasi Lisensi Centang Biru:</h4>
+                
+                <div class="pricing-grid">
+                    <div class="price-card" onclick="selectVipPackage('VIP 1 (2 Minggu)', 'https://files.catbox.moe/plxnb6.jpg', 5199, 'VIP 1')">
+                        <h5>2 Minggu</h5>
+                        <h4>Rp 5.199</h4>
+                    </div>
+                    <div class="price-card" onclick="selectVipPackage('VIP 2 (2 Bulan)', 'https://files.catbox.moe/m0l18e.jpg', 14145, 'VIP 2')">
+                        <h5>2 Bulan</h5>
+                        <h4>Rp 14.145</h4>
+                    </div>
+                    <div class="price-card" onclick="selectVipPackage('VIP 3 (7 Bulan)', 'https://files.catbox.moe/15nhdl.jpg', 50888, 'VIP 3')">
+                        <h5>7 Bulan</h5>
+                        <h4>Rp 50.888</h4>
+                    </div>
+                    <div class="price-card" onclick="selectVipPackage('ULTRA VIP KING (1 Tahun)', 'https://files.catbox.moe/us8coz.jpg', 100777, 'ULTRA KING')">
+                        <h5>1 Tahun (King/Putri)</h5>
+                        <h4>Rp 100.777</h4>
+                    </div>
+                </div>
+
+                <div id="payment-qr-container" class="payment-qr-section">
+                    <h4 id="selected-package-title" style="font-size:14px; color:#fff; margin-bottom:4px;">Paket Terpilih</h4>
+                    <p style="font-size:11px; color:#6c6980;">Scan QR Code di bawah untuk melakukan pembayaran otomatis:</p>
+                    
+                    <img id="payment-qr-image" src="" alt="QR Code Pembayaran">
+                    
+                    <div class="payment-details-box">
+                        <p><strong>Keterangan:</strong> Pembelian lisensi centang biru Namirunime ID</p>
+                        <p><strong>Total Pembayaran:</strong> <span id="payment-total-price" style="color:#ffd700; font-weight:bold;">Rp 0</span></p>
+                        <p><strong>Waktu Bayar:</strong> <span id="pay-time">-</span></p>
+                        <p><strong>Tanggal Saat Bayar:</strong> <span id="pay-date">-</span></p>
+                        <p><strong>Bulan Saat Bayar:</strong> <span id="pay-month">-</span></p>
+                        <p><strong>Tahun Saat Bayar:</strong> <span id="pay-year">-</span></p>
+                    </div>
+
+                    <button class="setup-submit-btn" style="background-color: #2ed573; margin-top: 14px;" onclick="simulatePaymentSuccess()">Konfirmasi Pembayaran Selesai (Deteksi Responsif)</button>
+                </div>
+
+                <div class="settings-card" style="margin-top: 20px;">
+                    <h4 style="font-size: 13px; color: #7b78ff; margin-bottom: 8px;"><i class="fa-solid fa-key"></i> Kode Redeem VIP / Owner</h4>
+                    <p style="font-size: 11px; color: #6c6980; margin-bottom: 10px;">Peringatan: Masukkan kode redeem resmi untuk otomatis jadi ULTRA KING.</p>
+                    <div class="edit-form-group" style="margin-bottom:0;">
+                        <input type="text" id="redeem-code-input" placeholder="Masukkan kode redeem di sini..." oninput="checkRedeemCode(this.value)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-settings" class="page-view">
+            <div class="header">
+                <div class="header-title" style="display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-chevron-left" style="cursor:pointer;" onclick="switchPage('profile')"></i> Settings
+                </div>
+                <div class="header-right"><span style="font-size:11px; color:#6c6980;">SERVER-ID-675</span></div>
+            </div>
+
+            <div class="settings-container" style="padding-top:0;">
+                <div class="settings-group-title" style="margin-top:0;">Manage Profile & Identitas</div>
+                
+                <div class="settings-card">
+                    <h4 style="font-size: 13px; color: #7b78ff; margin-bottom: 12px;"><i class="fa-solid fa-user-pen"></i> Ubah Detail Profil & Akun</h4>
+                    
+                    <div class="edit-form-group">
+                        <label>Ganti Nama Pengguna (Langsung Terubah)</label>
+                        <input type="text" id="input-username" value="" oninput="liveUpdateUsername(this.value)">
+                    </div>
+
+                    <div class="edit-form-group">
+                        <label>Pilih Foto Profil dari Galeri / File</label>
+                        <div class="file-input-wrapper">
+                            <div class="file-fake-btn">
+                                <span id="file-chosen-text">Pilih file gambar...</span>
+                                <i class="fa-solid fa-folder-open"></i>
+                            </div>
+                            <input type="file" id="input-avatar-file" accept="image/*" onchange="previewAvatarFile(event)">
+                        </div>
+                    </div>
+
+                    <div class="edit-form-group">
+                        <label>Tanggal Lahir</label>
+                        <input type="date" id="input-birthdate" value="2000-01-01" onchange="showComingSoon('Simpan Tanggal Lahir')">
+                    </div>
+
+                    <div class="edit-form-group">
+                        <label>Gender / Jenis Kelamin</label>
+                        <select id="input-gender" onchange="showComingSoon('Simpan Gender')">
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                            <option value="Rahasia">Lainnya / Rahasia</option>
+                        </select>
+                    </div>
+
+                    <div class="edit-form-group">
+                        <label>Kode Centang Biru / Redeem</label>
+                        <input type="text" id="input-verify-code" placeholder="Masukkan kode..." oninput="checkVerifyCode(this.value)">
+                    </div>
+                </div>
+
+                <div class="settings-group-title">Membership & Sistem</div>
+                <div class="settings-item" onclick="switchPage('vip-store')">
+                    <div class="settings-item-left"><i class="fa-solid fa-crown" style="color:#ffd700;"></i> Beli Lisensi VIP & Centang Biru</div>
+                    <i class="fa-solid fa-chevron-right" style="color:#6c6980; font-size:11px;"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="switchPage('beranda', this)">
+                <i class="fa-solid fa-house"></i>
+                <span>Beranda</span>
+            </button>
+            <button class="nav-item" onclick="switchPage('explore', this)">
+                <i class="fa-solid fa-compass"></i>
+                <span>Explore</span>
+            </button>
+            <button class="nav-item" onclick="showComingSoon('Fitur Magic / Tambahan')">
+                <div class="nav-center-btn">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+            </button>
+            <button class="nav-item" onclick="showComingSoon('Halaman Chat Komunitas')">
+                <span class="badge-notification">99+</span>
+                <i class="fa-solid fa-comment"></i>
+                <span>Chat</span>
+            </button>
+            <button class="nav-item" onclick="switchPage('profile', this)">
+                <i class="fa-solid fa-user"></i>
+                <span>Profil</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const splashVideo = document.getElementById('splash-video');
+        const percentText = document.getElementById('loading-percent');
+        const splashScreen = document.getElementById('splash-screen');
+        const mandatorySetupModal = document.getElementById('mandatory-setup-modal');
+        const documentBody = document.body;
+
+        let isVideoFinished = false;
+        let setupAvatarData = "";
+        let selectedVipTier = "FREE";
+
+        function showComingSoon(featureName) {
+            alert(`"${featureName}" - Segera Hadir! Fitur ini sedang dalam pengembangan.`);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedAccount = localStorage.getItem('namirunime_user_account');
+            if (savedAccount) {
+                const data = JSON.parse(savedAccount);
+                applyAccountData(data);
+            }
+        });
+
+        splashVideo.addEventListener('timeupdate', function() {
+            if (!isVideoFinished && splashVideo.duration) {
+                let progress = Math.floor((splashVideo.currentTime / splashVideo.duration) * 100);
+                if (progress > 99) progress = 99;
+                percentText.innerText = progress + '%';
+            }
+        });
+
+        splashVideo.addEventListener('ended', function() {
+            checkAndProceedSplash();
+        });
+
+        window.onload = function() {
+            setTimeout(() => {
+                if (!isVideoFinished) {
+                    splashVideo.currentTime = splashVideo.duration || 5;
+                    checkAndProceedSplash();
+                }
+            }, 10000);
+        };
+
+        function checkAndProceedSplash() {
+            isVideoFinished = true;
+            percentText.innerText = '100%';
+            
+            const savedAccount = localStorage.getItem('namirunime_user_account');
+            setTimeout(() => {
+                splashScreen.style.opacity = '0';
+                splashScreen.style.visibility = 'hidden';
+                
+                if (savedAccount) {
+                    documentBody.classList.add('page-loaded');
+                } else {
+                    mandatorySetupModal.classList.add('active');
+                }
+            }, 1000);
+        }
+
+        function handleSetupAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('setup-file-text').innerText = "File: " + file.name;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    setupAvatarData = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function submitMandatorySetup() {
+            const nameInput = document.getElementById('setup-username-input').value.trim();
+            if (nameInput === "") {
+                alert("Nama pengguna wajib diisi!");
+                return;
+            }
+            if (setupAvatarData === "") {
+                alert("Foto profil wajib diunggah dari galeri!");
+                return;
+            }
+
+            const accountData = {
+                username: nameInput,
+                avatar: setupAvatarData,
+                vipTier: "FREE",
+                animeCount: 0,
+                episodeCount: 0,
+                watchMinutes: 0,
+                friendsCount: 0
+            };
+
+            localStorage.setItem('namirunime_user_account', JSON.stringify(accountData));
+
+            applyAccountData(accountData);
+            mandatorySetupModal.classList.remove('active');
+            documentBody.classList.add('page-loaded');
+        }
+
+        function applyAccountData(data) {
+            document.getElementById('display-username').innerText = data.username;
+            document.getElementById('profile-page-username').innerText = data.username;
+            document.getElementById('input-username').value = data.username;
+
+            document.getElementById('beranda-avatar').src = data.avatar;
+            document.getElementById('profile-page-avatar').src = data.avatar;
+            document.getElementById('header-thumb').src = data.avatar;
+            document.getElementById('explore-thumb').src = data.avatar;
+
+            document.getElementById('stat-anime').innerText = data.animeCount ?? 0;
+            document.getElementById('stat-episode').innerText = data.episodeCount ?? 0;
+            
+            const watchMins = data.watchMinutes ?? 0;
+            const hours = Math.floor(watchMins / 60);
+            const mins = watchMins % 60;
+            document.getElementById('stat-watchtime').innerText = `${hours}j ${mins}m`;
+            document.getElementById('profile-stat-watchtime').innerText = `${watchMins} menit`;
+
+            const friends = data.friendsCount ?? 0;
+            document.getElementById('stat-friends').innerText = friends;
+            document.getElementById('profile-stat-friends').innerText = friends;
+
+            updateVipBadgeUI(data.vipTier || "FREE");
+        }
+
+        function switchPage(pageName, element) {
+            document.querySelectorAll('.page-view').forEach(page => {
+                page.classList.remove('active-page');
+            });
+
+            if (pageName === 'beranda') {
+                document.getElementById('page-beranda').classList.add('active-page');
+            } else if (pageName === 'explore') {
+                document.getElementById('page-explore').classList.add('active-page');
+            } else if (pageName === 'profile') {
+                document.getElementById('page-profile').classList.add('active-page');
+            } else if (pageName === 'vip-store') {
+                document.getElementById('page-vip-store').classList.add('active-page');
+            } else if (pageName === 'settings') {
+                document.getElementById('page-settings').classList.add('active-page');
+            }
+
+            if (element) {
+                document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                element.classList.add('active');
+            }
+
+            window.scrollTo(0, 0);
+        }
+
+        function liveUpdateUsername(val) {
+            const cleanVal = val.trim() !== "" ? val : "NamirunimeUser";
+            document.getElementById('display-username').innerText = cleanVal;
+            document.getElementById('profile-page-username').innerText = cleanVal;
+
+            updateLocalStorageField('username', cleanVal);
+        }
+
+        function previewAvatarFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('file-chosen-text').innerText = file.name;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageUrl = e.target.result;
+                    document.getElementById('beranda-avatar').src = imageUrl;
+                    document.getElementById('profile-page-avatar').src = imageUrl;
+                    document.getElementById('header-thumb').src = imageUrl;
+                    document.getElementById('explore-thumb').src = imageUrl;
+
+                    updateLocalStorageField('avatar', imageUrl);
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateLocalStorageField(key, value) {
+            const savedAccount = localStorage.getItem('namirunime_user_account');
+            if (savedAccount) {
+                let data = JSON.parse(savedAccount);
+                data[key] = value;
+                localStorage.setItem('namirunime_user_account', JSON.stringify(data));
+            }
+        }
+
+        function selectVipPackage(packageName, qrUrl, priceVal, tierName) {
+            selectedVipTier = tierName;
+            document.getElementById('payment-qr-container').style.display = 'block';
+            document.getElementById('selected-package-title').innerText = "Paket: " + packageName;
+            document.getElementById('payment-qr-image').src = qrUrl;
+            document.getElementById('payment-total-price').innerText = "Rp " + priceVal.toLocaleString('id-ID');
+
+            const now = new Date();
+            document.getElementById('pay-time').innerText = now.toLocaleTimeString('id-ID');
+            document.getElementById('pay-date').innerText = now.getDate();
+            document.getElementById('pay-month').innerText = now.toLocaleString('id-ID', { month: 'long' });
+            document.getElementById('pay-year').innerText = now.getFullYear();
+        }
+
+        function simulatePaymentSuccess() {
+            alert(`Pembayaran berhasil dideteksi!\nStatus akun Anda kini berubah otomatis menjadi: ${selectedVipTier}`);
+            updateVipBadgeUI(selectedVipTier);
+            updateLocalStorageField('vipTier', selectedVipTier);
+            switchPage('beranda');
+        }
+
+        function checkRedeemCode(code) {
+            const trimmed = code.trim();
+            if (trimmed === "Prmoszxryn1326oktbr" || trimmed === "Onwer13bandnamruZiuryxIdjpnjwo10" || trimmed === "KING") {
+                alert("Kode redeem valid! Akun Anda otomatis menjadi ULTRA KING & Centang Biru Aktif.");
+                updateVipBadgeUI("ULTRA KING");
+                updateLocalStorageField('vipTier', "ULTRA KING");
+            }
+        }
+
+        function checkVerifyCode(code) {
+            checkRedeemCode(code);
+        }
+
+        function updateVipBadgeUI(tier) {
+            const badgeEl = document.getElementById('user-vip-badge-label');
+            const verifiedEl = document.getElementById('beranda-verified');
+            const profileVerifiedEl = document.getElementById('profile-verified');
+
+            if (tier === "VIP 1") {
+                badgeEl.innerHTML = `<i class="fa-solid fa-crown"></i> VIP 1`;
+            } else if (tier === "VIP 2") {
+                badgeEl.innerHTML = `<i class="fa-solid fa-crown"></i> VIP 2`;
+            } else if (tier === "VIP 3") {
+                badgeEl.innerHTML = `<i class="fa-solid fa-crown"></i> VIP 3`;
+            } else if (tier === "ULTRA KING") {
+                badgeEl.innerHTML = `<i class="fa-solid fa-chess-king"></i> ULTRA KING`;
+                badgeEl.style.color = "#ff4757";
+                badgeEl.style.backgroundColor = "rgba(255, 71, 87, 0.15)";
+            } else {
+                badgeEl.innerHTML = `<i class="fa-solid fa-crown"></i> FREE`;
+            }
+
+            if (tier !== "FREE") {
+                if (verifiedEl) verifiedEl.style.display = 'inline-block';
+                if (profileVerifiedEl) profileVerifiedEl.style.display = 'inline-block';
+            } else {
+                if (verifiedEl) verifiedEl.style.display = 'none';
+                if (profileVerifiedEl) profileVerifiedEl.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
